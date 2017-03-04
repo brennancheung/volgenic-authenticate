@@ -1,0 +1,32 @@
+{
+  "name": "volgenic-authenticate",
+  "version": "1.0.0",
+  "description": "An authentication microservice for Docker.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --harmony src/server/server.js",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brennancheung/volgenic-authenticate.git"
+  },
+  "keywords": [
+    "authentication",
+    "microservice",
+    "docker"
+  ],
+  "author": "Brennan Cheung",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/brennancheung/volgenic-authenticate/issues"
+  },
+  "homepage": "https://github.com/brennancheung/volgenic-authenticate#readme",
+  "devDependencies": {
+    "jest": "^19.0.2"
+  },
+  "dependencies": {
+    "express": "^4.15.0",
+    "mongo": "^0.1.0"
+  }
+}

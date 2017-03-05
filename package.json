@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node --harmony src/server/server.js",
-    "test": "test"
+    "test": "jest --watch"
   },
   "repository": {
     "type": "git",

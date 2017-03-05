@@ -2,12 +2,13 @@ const fs = require('fs')
 const express = require('express')
 const http = require('http')
 const MongoClient = require('mongodb').MongoClient
+const bodyParser = require('body-parser')
 
 const mongoUrl = 'mongodb://mongo/authenticate'
 const port = process.env.VG_AUTHENTICATION_PORT || 80
 
 // This secret should be created before the microservice is started.
-const secretPath = '/run/secrets/authenticate-root-password'
+const secretPath = '/run/secrets/authenticate-secret-key'
 
 console.log(`Loading secret from ${secretPath}`)
 const secret = fs.readFileSync(secretPath, 'utf8');
@@ -15,7 +16,7 @@ const secret = fs.readFileSync(secretPath, 'utf8');
 if (!secret) {
   console.log('WARNING: Secret does not exist.')
   console.log('Usage:')
-  console.log('  openssl rand -base64 20 | docker secret create authenticate-root-password -')
+  console.log('  openssl rand -base64 20 | docker secret create authenticate-secret-key -')
   process.exit(1)
 }
 
@@ -37,13 +38,16 @@ function dbConnect () {
 
 function truncate (collectionName) {
   return new Promise((resolve, reject) => {
-    const collection = db.collection(collectionName)
-    collection.drop((err, reply) => {
-      if (err) {
-        return reject(err)
-      }
-      resolve()
-    })
+    try {
+      const collection = db.collection(collectionName)
+      collection.drop((err, reply) => {
+        // The mongodb client will throw an exception if the collection doesn't exist.
+        // This is not really an error.  Just resolve normally.
+        resolve()
+      })
+    } catch (err) {
+      console.log(err)
+    }
   })
 }
 
@@ -80,15 +84,44 @@ async function startServer () {
 
     console.info(`Connecting to database (${mongoUrl})`)
     await dbConnect()
-    console.log('after')
+
+    app.use(bodyParser.json())
 
     app.use((req, res, next) => {
       console.info(`${req.method} ${req.url}`)
-      next()
+
+      // perform the authentication
+      const headerKey = req.headers && req.headers['x-authenticate-secret']
+      if (headerKey) {
+        next()
+      } else {
+        res.status(401).send('unauthorized')
+      }
     })
 
-    app.get('/', (req, res) => {
-      res.send('hello world')
+    app.get('/tenants', (req, res) => {
+      // TODO: send lists of tenants
+      res.status(200).send({tenants: []})
+    })
+
+    app.post('/tenants', (req, res) => {
+      // TODO: create the tenant
+      if (false) {
+        return res.status(409).send({error: 'tenant already exists'})
+      }
+
+      res.status(201).send({tenant: {_id: 123, name: 'foo'}})
+    })
+
+    app.put('/tenants/:id', (req, res) => {
+      if (false) {
+        return res.status(404).send({error: 'tenant not found'})
+      }
+      res.status(200).send({tenant: {_id: 123, name: 'foo'}})
+    })
+
+    app.put('/tenants/:id', (req, res) => {
+      res.status(200).send({tenant: {_id: 123, name: 'foo'}})
     })
 
     return app
